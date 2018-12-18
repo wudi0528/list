@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>待办事项列表</title>
+	<link rel="stylesheet" href="bootstrap.css">
+	<link rel="stylesheet" href="animate.css">
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" media="screen" />
+	<script src="vue.js"></script>
+	<style>
+		*{margin:0;padding:0;}
+		body{
+			background: #CDCDCD;
+			overflow-x:hidden;
+		}
+		.tou{
+			background: rgba(47,47,47,0.98);
+		}
+		.ban{
+			overflow:hidden;
+			width:800px;
+			margin:0 auto;
+			padding:20px 0;
+			box-sizing:border-box;
+		}
+		.ban h2{
+			color:#fff;
+			margin:0;
+			float:left;
+		}
+		.ban button{
+			float:right;
+			margin-left:30px;
+		}
+		.ban input{
+			float:right;
+			width:500px;
+		}
+		.ban h3{
+			position:relative;
+			font-weight:700;
+			font-size:30px;
+		}
+		.ban h3 .count{
+			position: absolute;
+		    top: 2px;
+		    right: 5px;
+		    display: inline-block;
+		    padding: 0 5px;
+		    height: 20px;
+		    width:20px;
+		    border-radius: 20px;
+		    background: #E6E6FA;
+		    line-height: 22px;
+		    text-align: center;
+		    color: #666;
+		    font-size: 14px;
+		}
+		ol{
+			list-style:none;
+		}
+		ol li{
+			height: 32px;
+		    line-height: 32px;
+		    background: #fff;
+		    position: relative;
+		    margin-bottom: 10px;
+		    padding: 0 45px;
+		    border-radius: 3px;
+		    border-left: 5px solid #629A9C;
+		    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+		}
+		.ban ol li input{
+			    position: absolute;
+			    top: 2px;
+			    left: 10px;
+			    width: 22px;
+			    height: 22px;
+			    cursor: pointer;
+		}
+		.ban ol li span{
+			    position: absolute;
+			    top: 4px;
+			    right: 5px;
+			    display: inline-block;
+			    width: 26px;
+			    height: 24px;
+			    border-radius: 14px;
+			    border: 6px double #FFF;
+			    background: #CCC;
+			    line-height: 14px;
+			    text-align: center;
+			    color: #FFF;
+			    font-weight: bold;
+			    font-size: 14px;
+			    cursor: pointer;
+		}
+		ul{
+			list-style:none;
+		}
+		ul li{
+			height: 32px;
+		    line-height: 32px;
+		    background: #fff;
+		    position: relative;
+		    margin-bottom: 10px;
+		    padding: 0 45px;
+		    border-radius: 3px;
+		    border-left: 5px solid #629A9C;
+		    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+		    border-left: 5px solid #999;
+    		opacity: 0.5;
+		}
+		.ban ul li input{
+			    position: absolute;
+			    top: 2px;
+			    left: 10px;
+			    width: 22px;
+			    height: 22px;
+			    cursor: pointer;
+		}
+		.ban ul li span{
+			    position: absolute;
+			    top: 4px;
+			    right: 5px;
+			    display: inline-block;
+			    width: 26px;
+			    height: 24px;
+			    border-radius: 14px;
+			    border: 6px double #FFF;
+			    background: #CCC;
+			    line-height: 14px;
+			    text-align: center;
+			    color: #FFF;
+			    font-weight: bold;
+			    font-size: 14px;
+			    cursor: pointer;
+		}
+		h3 p{
+			font-size:16px;
+			font-weight:normal;
+		}
+	</style>
+</head>
+<body>
+	<div id="div">
+		<div class="tou">
+			<div class="ban">
+				<top @add="add"></top>
+			</div>
+		</div>
+			<div class="ban">
+				<todo :list="list" @remove="remove" @changestatus="markfinished"></todo>
+				<finished :list="list" @remove="remove" @mm="mm"></finished>
+			</div>
+	</div>
+	<script>
+		Vue.component("top",{
+			template:`
+				<header>
+					<div class="ban">
+						<h2>ToDoList</h2>
+						<button v-if="todo" class="btn btn-primary add" @click="add">提交</button>
+						<button v-if="!todo" class="btn btn-danger" disabled>没有内容</button>
+						<input type="text" placeholder="添加事件" class="form-control" v-model="todo" @keyup.13="add">
+					</div>
+				</header>
+			`,
+			data(){
+				return {
+					todo:""
+				}
+			},
+			methods:{
+				add(){
+					this.$emit("add",this.todo);
+					this.todo=""
+				}
+			}
+		})
+		Vue.component("todo",{
+			template:`
+				<div>
+					<h3>
+						正在进行
+						<span class="count">{{count}}</span>
+						<p v-if="!count">目前没有待办事项</p>
+					</h3>
+					<ol>
+						<transition-group enter-active-class="animated bounceInRight" leave-active-class="animated fadeOutRight">
+							<li v-show="!item.status" v-for="(item,index) of list" :key="item.name">
+								<input type="checkbox" @click="changestatus(index)">
+								{{item.name}}
+								<span @click="remove(index)">-</span>
+							</li>
+						</transition-group>
+					</ol>
+				</div>
+			`,
+			props:["list"],
+			methods:{
+				remove(index){
+					this.$emit("remove",index)
+				},
+				changestatus(index){
+					this.$emit("changestatus",index)
+				}
+			},
+			computed:{
+				count(){
+					var count = 0;
+					for(let item of this.list){
+						if(!item.status){
+							count++;
+						}
+					}
+					return count;
+				}
+			}
+		})
+		Vue.component("finished",{
+			template:`
+				<div>
+					<h3>
+						已经完成
+						<span class="count">{{count}}</span>
+						<p v-if="!count">目前没有未完成事项</p>
+					</h3>
+					<ul>
+						<transition-group enter-active-class="animated bounceInRight" leave-active-class="animated fadeOutRight">
+							<li v-show="item.status" v-for="(item,index) of list" :key="item.name">
+								<input type="checkbox" checked="checked" checked @click="mm(index)">
+								{{item.name}}
+								<span @click="remove(index)">-</span>
+							</li>
+						</transition-group>
+					</ul>
+				</div>
+			`,
+			props:["list"],
+			methods:{
+				remove(index){
+					this.$emit("remove",index)
+				},
+				mm(index){
+					this.$emit("mm",index)
+				}
+			},
+			computed:{
+				count(){
+					var count = 0;
+					for(let item of this.list){
+						if(item.status){
+							count++;
+						}
+					}
+					return count;
+				}
+			}
+		})
+		window.onunload=function(){
+			localStorage.setItem("list",JSON.stringify(root.list));
+		}
+		var root = new Vue({
+			el:"#div",
+			data(){
+				return {
+					list:[]
+				}
+			},
+			methods:{
+				add(todo){
+					var obj = {
+						name:todo,
+						status:false
+					}
+					this.list.push(obj);
+
+				},
+				remove(index){
+					this.list.splice(index,1)
+				},
+				markfinished(index){
+					this.list[index].status = true;
+				},
+				mm(index){
+					this.list[index].status = false;
+				}
+			},
+			mounted(){
+				var list = JSON.parse(localStorage.getItem("list"));
+				if(list){
+					this.list = list;
+				}
+			}			
+		})
+	</script>
+</body>
+</html>
